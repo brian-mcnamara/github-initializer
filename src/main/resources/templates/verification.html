@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <form action="/perform">
+            <p>The following will be applied to your account #TODO</p>
+            <input name="code" type="text" hidden="true" th:attr="value=${code}"/>
+            <input name="state" type="text" hidden="true" th:attr="value=${state}"/>
+            <input name="submit" type="submit" />
+        </form>
+    </body>
+</html>

@@ -1,11 +1,33 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
-    <body>
-        <form action="/perform">
-            <p>The following will be applied to your account #TODO</p>
-            <input name="code" type="text" hidden="true" th:attr="value=${code}"/>
-            <input name="state" type="text" hidden="true" th:attr="value=${state}"/>
-            <input name="submit" type="submit" />
-        </form>
-    </body>
+<head>
+    <style>
+        form { margin: auto; max-width: 800px; text-align: center;}
+        input[type=submit] {
+          background-color: #1798c1;
+          border: none;
+          color: white;
+          padding: 15px 32px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/perform">
+        <h1>GitHub-initializer</h1>
+        <p>Please verify the following keys to be added to your account.</p>
+        <div th:if="${sshkey != null}">
+            <p>SSH key: <span th:text="${sshkey}"></span></p>
+        </div>
+        <div th:if="${gpgkey != null}">
+            <p>GPG key: <span th:text="${gpgkey}"></span></p>
+        </div>
+        <input name="code" type="text" hidden="true" th:attr="value=${code}"/>
+        <input name="state" type="text" hidden="true" th:attr="value=${state}"/>
+        <input name="accept" type="submit" />
+    </form>
+</body>
 </html>

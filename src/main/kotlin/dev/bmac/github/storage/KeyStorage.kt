@@ -18,12 +18,18 @@ class KeyStorage(@Value("\${redis.url}") redisHost: String) {
     fun addPayload(key: String, payload: Payload) {
         val conn = getConnection()
         conn.set(key, Json.stringify(Payload.serializer(), payload))
+        conn.expire(key, 60 * 10)
     }
 
     fun getPayload(key: String): Payload {
         val conn = getConnection()
         val json = conn.get(key) ?: throw RuntimeException("TODO")
         return Json.parse(Payload.serializer(), json)
+    }
+
+    fun getExpiration(key: String): Long {
+        val conn = getConnection()
+        return conn.ttl(key)
     }
 
     private fun getConnection() : RedisCommands<String, String> {

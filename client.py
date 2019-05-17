@@ -5,6 +5,7 @@ import argparse
 import http.client
 import json
 import subprocess
+import socket
 
 parser = argparse.ArgumentParser(description='Upload users SSH and GPG keys to GitHub')
 parser.add_argument('--host', dest="host", default="localhost:8080",
@@ -20,7 +21,7 @@ def main():
     if args.ssh is not None:
         f=open(args.ssh, "r")
         body["sshKey"] = {
-            "title" : "test",
+            "title" : socket.gethostname(),
             "key": f.read()
         }
     if args.gpg is not None:

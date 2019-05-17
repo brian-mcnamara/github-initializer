@@ -17,10 +17,12 @@ import java.util.*
 
 @RestController
 class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl: String,
+                     @Value("\${github.api.host}") githubApiUrl: String,
                      @Value("\${client.id}") clientId: String,
                      @Value("\${client.secret}") clientSecret: String) {
     val keyStorage = keyStorage
     val githubUrl = githubUrl
+    val githubApiUrl = githubApiUrl
     val clientId = clientId
     val clientSecret = clientSecret
     val client = OkHttpClient()
@@ -57,7 +59,7 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
         if (payload.sshKey != null) {
             val json = Json.stringify(SshKey.serializer(), payload.sshKey)
             val body = okhttp3.RequestBody.create(JSON, json)
-            val request = Request.Builder().url("https://api.${githubUrl}/user/keys")
+            val request = Request.Builder().url("https://${githubApiUrl}/user/keys")
                 .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
             client.newCall(request).execute().use {
                 if (it.code() != HttpStatus.CREATED.value()) {
@@ -67,7 +69,7 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
         }
         if (payload.gpgKey != null) {
             val body = okhttp3.RequestBody.create(JSON, Json.stringify(GpgKey.serializer(), payload.gpgKey))
-            val request = Request.Builder().url("https://api.${githubUrl}/user/gpg_keys")
+            val request = Request.Builder().url("https://${githubApiUrl}/user/gpg_keys")
                 .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
             client.newCall(request).execute().use {
                 if (it.code() != HttpStatus.CREATED.value()) {

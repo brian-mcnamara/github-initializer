@@ -34,7 +34,7 @@ class WebController(keyStorage: KeyStorage, @Value("\${client.id}") clientId: St
             response.status = 404
             return null
         }
-        val payload = keyStorage.getPayload(state)
+        val payload = keyStorage.getPayload(state)!!
         //TODO is there a kotlin way to do this?
         if (payload.sshKey != null) {
             model.addAttribute("sshkey", getSshKeySignature(payload.sshKey))

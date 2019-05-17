@@ -9,21 +9,19 @@ import org.springframework.stereotype.Service
 import java.lang.RuntimeException
 
 @Service
+@UseExperimental(kotlinx.serialization.UnstableDefault::class)
 class KeyStorage(@Value("\${redis.url}") redisHost: String) {
-    val redisClient : RedisClient
-    init {
-        redisClient = RedisClient.create(redisHost)
-    }
+    private final val redisClient = RedisClient.create(redisHost)
 
     fun addPayload(key: String, payload: Payload) {
         val conn = getConnection()
         conn.set(key, Json.stringify(Payload.serializer(), payload))
-        conn.expire(key, 60 * 10)
+        conn.expire(key, 60 * 2)
     }
 
-    fun getPayload(key: String): Payload {
+    fun getPayload(key: String): Payload? {
         val conn = getConnection()
-        val json = conn.get(key) ?: throw RuntimeException("TODO")
+        val json = conn.get(key) ?: return null
         return Json.parse(Payload.serializer(), json)
     }
 

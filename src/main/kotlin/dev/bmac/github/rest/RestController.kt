@@ -9,17 +9,22 @@ import okhttp3.Request
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
+import java.lang.Exception
 import java.lang.RuntimeException
 import java.util.*
+import java.util.logging.Logger
 
 @RestController
+@UseExperimental(kotlinx.serialization.UnstableDefault::class)
 class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl: String,
                      @Value("\${github.api.host}") githubApiUrl: String,
                      @Value("\${client.id}") clientId: String,
                      @Value("\${client.secret}") clientSecret: String) {
+    final val logger = Logger.getLogger(this::class.simpleName)
     val keyStorage = keyStorage
     val githubUrl = githubUrl
     val githubApiUrl = githubApiUrl
@@ -36,10 +41,11 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
     }
 
     @GetMapping("/perform")
-    fun perform(@RequestParam("code") code: String, @RequestParam("state") state: String) {
-        val payload = keyStorage.getPayload(state)
+    fun perform(@RequestParam("code") code: String, @RequestParam("state") state: String): ResponseEntity<String> {
+        val payload = keyStorage.getPayload(state) ?: return ResponseEntity(HttpStatus.NOT_FOUND)
         val accessToken = authenticate(code, state)
-        upload(accessToken, payload)
+        val status = upload(accessToken, payload)
+        return ResponseEntity(status)
     }
 
     private fun authenticate(code: String, state: String): String {
@@ -55,7 +61,9 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
         }
     }
 
-    private fun upload(accessToken: String, payload: Payload) {
+    private fun upload(accessToken: String, payload: Payload): HttpStatus {
+        var sshStatus = 201
+        var gpgStatus = 201
         if (payload.sshKey != null) {
             val json = Json.stringify(SshKey.serializer(), payload.sshKey)
             val body = okhttp3.RequestBody.create(JSON, json)
@@ -63,7 +71,10 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
                 .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
             client.newCall(request).execute().use {
                 if (it.code() != HttpStatus.CREATED.value()) {
-                    throw RuntimeException("TODO")
+                    sshStatus = it.code()
+                    it.body().use {body ->
+                        logger.warning("Failed to upload user ssh key: $sshStatus\n ${body?.string()} ")
+                    }
                 }
             }
         }
@@ -73,10 +84,14 @@ class RestController(keyStorage: KeyStorage, @Value("\${github.host}") githubUrl
                 .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
             client.newCall(request).execute().use {
                 if (it.code() != HttpStatus.CREATED.value()) {
-                    throw RuntimeException("TODO")
+                    gpgStatus = it.code()
+                    it.body().use { body ->
+                        logger.warning("Failed to upload user gpg key: $gpgStatus\n ${body?.string()} ")
+                    }
                 }
             }
         }
+        return HttpStatus.CREATED
     }
 }
 

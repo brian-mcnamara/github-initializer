@@ -1,10 +1,22 @@
 # GitHub Initializer
 
-This project aims to act as a broker allowing clients to submit SSH and GPG keys to a users account.
+Simple broker that enables clients to securely upload a users SSH and GPG keys.
+Clients upload their keys to `/upload` with a payload of
+```json
+{
+    "sshKey": {
+        "title" : title,
+        "key": "ssh-ras..."
+    },
+    "gpgKey": {
+        "armored_public_key": "-----BEGIN PGP..."
+    }
+}
+```
 
-More to come...
+A example client can be found in this repo name client.py
 
 ## Development
 
 Add a `application-dev.properties` file under src/main/resources that contains
-`client.id` and `client.secret` that correlate to a GitHub oauth app.
+`client.id` and `client.secret` from the GitHub oauth app.

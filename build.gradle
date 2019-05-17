@@ -1,10 +1,11 @@
 buildscript {
-    ext.kotlin_version = '1.3.21'
+    ext.kotlin_version = '1.3.31'
     repositories { jcenter() }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
     }
 }
 
@@ -18,6 +19,8 @@ plugins {
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'kotlin'
 apply plugin: 'kotlinx-serialization'
+apply plugin: 'war'
+apply plugin: 'docker'
 
 group 'dev.bmac.github'
 version '1.0-SNAPSHOT'
@@ -52,4 +55,16 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+// write this docker build task, this will run just after "./gradlew build" command
+task buildDocker(type: Docker, dependsOn: build) {
+    push = false
+    applicationName = bootJar.baseName
+    dockerfile = file('Dockerfile')
+    doFirst {
+        copy {
+            from jar
+            into stageDir
+        }
+    }
 }

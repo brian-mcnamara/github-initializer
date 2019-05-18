@@ -15,8 +15,8 @@ import javax.annotation.PreDestroy
 @Component
 @ConditionalOnProperty(name = ["redis.local"], havingValue = "true")
 class LocalRedis(@Value("\${redis.url}") redisUrl: String) {
-    final val uri = URI(redisUrl)
-    final val redisServer = RedisServer(uri.port)
+    private val uri = URI(redisUrl)
+    private val redisServer = RedisServer(uri.port)
 
     @PostConstruct
     fun init() {

@@ -2,29 +2,35 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <style>
-        form { margin: auto; max-width: 800px; text-align: center;}
+        form { margin: auto; text-align: center; font-size:larger;}
         input[type=submit] {
           background-color: #1798c1;
           border: none;
           color: white;
-          padding: 15px 32px;
+          padding: 25px 75px;
           text-align: center;
           text-decoration: none;
           display: inline-block;
           font-size: 16px;
         }
+        h1 {
+          font-size: 4em;
+        }
+        .keys {
+          display: table;
+          margin: 1rem auto;
+          text-align: left;
+        }
     </style>
 </head>
 <body>
-    <form action="/perform">
+    <form action="/perform" method="post">
         <h1>GitHub-initializer</h1>
-        <p>Please verify the following keys to be added to your account.</p>
-        <div th:if="${sshkey != null}">
-            <p>SSH key: <span th:text="${sshkey}"></span></p>
-        </div>
-        <div th:if="${gpgkey != null}">
-            <p>GPG key: <span th:text="${gpgkey}"></span></p>
-        </div>
+        <h2>Please verify the following keys to be added to your account.</h2>
+        <ul class="keys">
+            <li th:if="${sshkey != null}">SSH key: <span th:text="${sshkey}"></span></li>
+            <li th:if="${gpgkey != null}">GPG key: <span th:text="${gpgkey}"></span></li>
+        </ul>
         <input name="code" type="text" hidden="true" th:attr="value=${code}"/>
         <input name="state" type="text" hidden="true" th:attr="value=${state}"/>
         <input name="accept" type="submit" />

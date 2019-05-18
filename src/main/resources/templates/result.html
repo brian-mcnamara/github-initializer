@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style>
+        .result {
+            margin:auto;
+            text-align:center;
+        }
+        .errors {
+            display: table;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="result">
+        <div class="success" th:if="${success == true}">
+            <h1>Success!</h1>
+            <h2>Your keys were successfully uploaded.<br/>You can close this window.</h2>
+        </div>
+        <div th:if="${success == false}">
+            <h1>Something went wrong...</h1>
+            <h2>You can close this browser.</h2>
+            <ul class="errors">
+                <li th:each="s: ${status}">
+                    Failed to upload <span th:text="${s.type}"/> key
+                    <p th:text="${s.getError().errors.get(0).message}"></p>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

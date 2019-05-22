@@ -12,12 +12,10 @@ import java.util.*
 @RestController
 class RestController(val keyStorage: KeyStorage,
                      @Value("\${github.host}") val githubUrl: String,
-                     @Value("\${github.api.host}") val githubApiUrl: String,
-                     @Value("\${client.id}") val clientId: String,
-                     @Value("\${client.secret}") val clientSecret: String) {
+                     @Value("\${client.id}") val clientId: String) {
 
     @UseExperimental(kotlinx.serialization.UnstableDefault::class)
-    @PostMapping("/upload")
+    @PostMapping("/upload", produces = ["application/json"])
     fun upload(@RequestBody payload: Payload): String {
         val uuid = UUID.randomUUID().toString()
         keyStorage.addPayload(uuid, payload)

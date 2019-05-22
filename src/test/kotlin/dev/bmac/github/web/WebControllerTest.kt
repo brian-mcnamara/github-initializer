@@ -1,7 +1,7 @@
 package dev.bmac.github.web
 
-import dev.bmac.github.rest.GpgKey
-import dev.bmac.github.rest.SshKey
+import dev.bmac.github.GpgKey
+import dev.bmac.github.SshKey
 import org.junit.Assert
 import org.junit.Test
 

@@ -6,15 +6,24 @@ Clients upload their keys to `/upload` with a payload of
 {
     "sshKey": {
         "title" : title,
-        "key": "ssh-ras..."
+        "key": "ssh-rsa..."
     },
     "gpgKey": {
         "armored_public_key": "-----BEGIN PGP..."
     }
 }
 ```
+which will return a JSON payload containing the UUID identifier and a redirect URL.
 
-A example client can be found in this repo name client.py
+The Redirect will preform the GitHub oauth dance eventually redirecting the user back to this service
+where a confirmation will ask the user to agree to upload on behalf of them. Upon confirmation, the service
+grabs an access token and proceeds to upload the keys.
+
+
+## Using client
+
+You can use the client attached by invoking:
+` ./client.py --sshFile /path/to/id_rsa.pub --gpg [GpGKeyId]`
 
 ## Development
 

@@ -29,6 +29,11 @@ repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -38,14 +43,18 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: '*' , module: "junit"
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
     implementation 'com.squareup.okhttp3:okhttp:3.14.1'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.0"
 
     implementation 'org.bouncycastle:bcpg-jdk15on:1.61'
     implementation "io.lettuce:lettuce-core:5.1.6.RELEASE"
-    implementation "com.github.kstyrc:embedded-redis:0.6"
+    implementation "ai.grakn:redis-mock:0.1.6"
 
 }
 

@@ -41,6 +41,10 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
                 model.addAttribute("gpgkey", getGpgFingerprint(key))
             }
         }
+
+        //Probably not needed, but here to make sure users navigate through the confirmation page.
+        val csrf = UUID.randomUUID().toString().replace("-", "")
+        model.addAttribute("csrf", csrf)
         model.addAttribute("code", code)
         model.addAttribute("state", state)
         model.addAttribute("expire", expire)
@@ -49,10 +53,16 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
 
     @PostMapping("/perform")
     fun perform(response: HttpServletResponse, model: Model,
-                @RequestParam("code") code: String, @RequestParam("state") state: String): String? {
+                @RequestParam("code") code: String, @RequestParam("state") state: String,
+                @RequestParam("csrf") csrf: String): String? {
         val payload = keyStorage.getPayload(state)
         if (payload == null) {
             response.status = HttpStatus.NOT_FOUND.value()
+            return null
+        }
+        val storedCsrf = keyStorage.getCSRF(state)
+        if (storedCsrf == null || !storedCsrf.equals(csrf)) {
+            response.status = HttpStatus.FORBIDDEN.value()
             return null
         }
         keyStorage.setState(state, State.IN_PROGRESS)

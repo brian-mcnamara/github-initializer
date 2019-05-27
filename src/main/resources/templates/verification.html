@@ -31,8 +31,9 @@
             <li th:if="${sshkey != null}">SSH key: <span th:text="${sshkey}"></span></li>
             <li th:if="${gpgkey != null}">GPG key: <span th:text="${gpgkey}"></span></li>
         </ul>
-        <input name="code" type="text" hidden="true" th:attr="value=${code}"/>
-        <input name="state" type="text" hidden="true" th:attr="value=${state}"/>
+        <input name="code" type="hidden" th:attr="value=${code}"/>
+        <input name="state" type="hidden" th:attr="value=${state}"/>
+        <input name="csrf" type="hidden" th:attr="value=${csrf}"/>
         <input name="accept" type="submit" />
     </form>
 </body>

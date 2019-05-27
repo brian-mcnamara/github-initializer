@@ -14,6 +14,7 @@ class KeyStorage(@Value("\${redis.url}") redisHost: String) {
     private final val redisClient = RedisClient.create(redisHost)
     val conn = getConnection()
     private val stateKey = { key: String -> "state:$key" }
+    private val csrfKey = { key: String -> "csrf:$key" }
 
     fun addPayload(key: String, payload: Payload) {
         conn.set(key, Json.stringify(Payload.serializer(), payload))
@@ -38,6 +39,15 @@ class KeyStorage(@Value("\${redis.url}") redisHost: String) {
     fun getState(key: String): State {
         val state = conn.get(stateKey(key)) ?: return State.UNKNOWN
         return State.valueOf(state)
+    }
+
+    fun setCSRF(key: String, csrf: String) {
+        conn.set(csrfKey(key), csrf);
+        conn.expire(csrfKey(key), 60 * 2)
+    }
+
+    fun getCSRF(key: String): String? {
+        return conn.get(csrfKey(key))
     }
 
     private fun getConnection() : RedisCommands<String, String> {

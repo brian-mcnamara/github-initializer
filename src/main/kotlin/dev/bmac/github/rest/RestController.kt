@@ -17,7 +17,7 @@ class RestController(val keyStorage: KeyStorage,
     @UseExperimental(kotlinx.serialization.UnstableDefault::class)
     @PostMapping("/upload", produces = ["application/json"])
     fun upload(@RequestBody payload: Payload): String {
-        val uuid = UUID.randomUUID().toString()
+        val uuid = UUID.randomUUID().toString().replace("-", "")
         keyStorage.addPayload(uuid, payload)
         val redirect = "https://${githubUrl}/login/oauth/authorize?client_id=${clientId}&state=${uuid}&scope=write:public_key,write:gpg_key"
         val response = UploadResponse(uuid, redirect)

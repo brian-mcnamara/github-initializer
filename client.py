@@ -2,7 +2,6 @@
 
 import webbrowser
 import argparse
-import http.client
 import json
 import subprocess
 import socket
@@ -14,7 +13,7 @@ parser = argparse.ArgumentParser(description='Upload users SSH and GPG keys to G
 parser.add_argument('--host', dest="host", default="https://gh-initializer.herokuapp.com",
                     help='The GitHub-initializer to connect to')
 
-parser.add_argument('--sshFile', dest="ssh", help='The SSH public key')
+parser.add_argument('--sshFile', dest="sshFile", help='The SSH public key')
 parser.add_argument('--gpgFile', dest="gpgFile", help='The gpg armored public key file')
 parser.add_argument('--gpgId', dest="gpg", help='The GPG long keyid')
 
@@ -25,8 +24,8 @@ def main():
         exit(1)
 
     body = {}
-    if args.ssh is not None:
-        f=open(args.ssh, "r")
+    if args.sshFile is not None:
+        f=open(args.sshFile, "r")
         body["sshKey"] = {
             "title" : socket.gethostname(),
             "key": f.read()

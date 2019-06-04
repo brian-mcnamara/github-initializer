@@ -48,6 +48,7 @@ dependencies {
     }
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation 'org.mockito:mockito-junit-jupiter:2.27.0'
 
     implementation 'com.squareup.okhttp3:okhttp:3.14.1'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.0"
@@ -56,6 +57,7 @@ dependencies {
     implementation "io.lettuce:lettuce-core:5.1.6.RELEASE"
     implementation "ai.grakn:redis-mock:0.1.6"
 
+    testImplementation 'net.sourceforge.htmlunit:htmlunit:2.35.0'
 }
 
 compileKotlin {

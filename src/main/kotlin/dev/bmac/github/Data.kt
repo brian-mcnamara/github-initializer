@@ -3,7 +3,7 @@ package dev.bmac.github
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UploadResponse(val uuid: String, val redirect: String)
+data class UploadResponse(val id: String, val redirect: String)
 
 @Serializable
 data class Payload(val sshKey: SshKey?, val gpgKey: GpgKey?)

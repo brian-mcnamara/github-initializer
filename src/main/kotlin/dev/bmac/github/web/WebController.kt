@@ -27,13 +27,13 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
     private val logger = Logger.getLogger(this::class.simpleName)
     @GetMapping("/initiate")
     fun initiate(response: HttpServletResponse, model: Model, @RequestParam("code") code: String,
-                 @RequestParam("state") state: String): String? {
-        val expire = keyStorage.getExpiration(state)
+                 @RequestParam("state") id: String): String? {
+        val expire = keyStorage.getExpiration(id)
         if (expire <= 0) {
             response.status = HttpStatus.NOT_FOUND.value()
             return null
         }
-        keyStorage.getPayload(state)?.let {
+        keyStorage.getPayload(id)?.let {
             it.sshKey?.let { key ->
                 model.addAttribute("sshkey", getSshKeySignature(key))
             }
@@ -44,38 +44,37 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
 
         //Probably not needed, but here to make sure users navigate through the confirmation page.
         val csrf = UUID.randomUUID().toString().replace("-", "")
+        keyStorage.setCSRF(id, csrf)
         model.addAttribute("csrf", csrf)
         model.addAttribute("code", code)
-        model.addAttribute("state", state)
+        model.addAttribute("id", id)
         model.addAttribute("expire", expire)
         return "verification"
     }
 
     @PostMapping("/perform")
     fun perform(response: HttpServletResponse, model: Model,
-                @RequestParam("code") code: String, @RequestParam("state") state: String,
+                @RequestParam("code") code: String, @RequestParam("id") id: String,
                 @RequestParam("csrf") csrf: String): String? {
-        val payload = keyStorage.getPayload(state)
+        val payload = keyStorage.getPayload(id)
         if (payload == null) {
             response.status = HttpStatus.NOT_FOUND.value()
             return null
         }
-        val storedCsrf = keyStorage.getCSRF(state)
+        val storedCsrf = keyStorage.getCSRF(id)
         if (storedCsrf == null || !storedCsrf.equals(csrf)) {
             response.status = HttpStatus.FORBIDDEN.value()
             return null
         }
-        keyStorage.setState(state, State.IN_PROGRESS)
-        val accessToken = gitHubUtil.getAuthenticationToken(code, state)
+        keyStorage.setState(id, State.IN_PROGRESS)
+        val accessToken = gitHubUtil.getAuthenticationToken(code, id)
         val status = upload(accessToken, payload)
-        val success = status.all { it.isSuccess() }
-        keyStorage.setState(state, if (success) State.COMPLETE else State.FAILED )
+        keyStorage.setState(id, if (status.isSuccessful()) State.COMPLETE else State.FAILED )
         model.addAttribute("status", status)
-        model.addAttribute("success", success)
         return "result"
     }
 
-    private fun upload(accessToken: String, payload: Payload): List<Status> {
+    private fun upload(accessToken: String, payload: Payload): StatusList {
         val statusList = mutableListOf<Status>()
         if (payload.sshKey != null) {
             statusList.add(gitHubUtil.uploadSsshKey(payload.sshKey, accessToken))
@@ -83,7 +82,7 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
         if (payload.gpgKey != null) {
             statusList.add(gitHubUtil.uploadGpgKey(payload.gpgKey, accessToken))
         }
-        return statusList
+        return StatusList(statusList)
     }
 }
 

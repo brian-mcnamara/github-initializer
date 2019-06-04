@@ -25,7 +25,7 @@ class RestController(val keyStorage: KeyStorage,
     }
 
     @GetMapping("/status")
-    fun status(@RequestParam("uuid") uuid: String): String {
+    fun status(@RequestParam("id") uuid: String): String {
         return keyStorage.getState(uuid).name
     }
 }

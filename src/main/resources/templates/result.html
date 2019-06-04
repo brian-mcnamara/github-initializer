@@ -13,17 +13,17 @@
 </head>
 <body>
     <div class="result">
-        <div class="success" th:if="${success == true}">
+        <div class="success" id="success" th:if="${status.isSuccessful() == true}">
             <h1>Success!</h1>
             <p>Your keys were successfully uploaded.<br/>You can close this window.</p>
         </div>
-        <div th:if="${success == false}">
+        <div id="errors" th:if="${status.isSuccessful() == false}">
             <h1>Something went wrong...</h1>
             <p>You can close this window.</p>
             <ul class="errors">
-                <li th:each="s: ${status}">
+                <li th:attr="id=${s.type.toString()}" th:each="s: ${status.errors}">
                     Failed to upload <span th:text="${s.type}"/> key
-                    <p th:text="${s.getError().errors.get(0).message}"></p>
+                    <p th:text="${s.errors?.errors?.get(0)?.message ?: '[error not found]'}"></p>
                 </li>
             </ul>
         </div>

@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <form action="/perform" method="post">
+    <form action="/perform" method="post" name="verification">
         <h1>GitHub-initializer</h1>
         <h2>Please verify the following keys to be added to your account.</h2>
         <ul class="keys">
@@ -32,7 +32,7 @@
             <li th:if="${gpgkey != null}">GPG key: <span th:text="${gpgkey}"></span></li>
         </ul>
         <input name="code" type="hidden" th:attr="value=${code}"/>
-        <input name="state" type="hidden" th:attr="value=${state}"/>
+        <input name="id" type="hidden" th:attr="value=${id}"/>
         <input name="csrf" type="hidden" th:attr="value=${csrf}"/>
         <input name="accept" type="submit" />
     </form>

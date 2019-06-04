@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.util.UriComponentsBuilder
+import java.util.stream.Collectors
 
 @Serializable
 data class SshKey(val key: String, val title: String)
@@ -23,16 +24,20 @@ data class GpgKey(val armored_public_key: String)
 data class GHErrors(val message: String, val errors: List<GHError>)
 
 @UseExperimental(kotlinx.serialization.UnstableDefault::class)
-class Status(val type: Type, val status: Int, val body: String?) {
+class Status(val type: Type, val status: Int, val errors: GHErrors? = null) {
+    constructor(type: Type, status: Int, body: String?): this(type, status, Json.nonstrict.parse(GHErrors.serializer(), body ?: ""))
     fun isSuccess(): Boolean {
         return status == HttpStatus.CREATED.value()
     }
+}
 
-    fun getError(): GHErrors? {
-        if (status != HttpStatus.UNPROCESSABLE_ENTITY.value()) {
-            return null
-        }
-        return Json.nonstrict.parse(GHErrors.serializer(), body ?: "")
+class StatusList(val status: List<Status>) {
+    fun isSuccessful(): Boolean {
+        return status.all { it.isSuccess() }
+    }
+
+    fun getErrors(): List<Status> {
+        return status.stream().filter { !it.isSuccess() }.collect(Collectors.toList())
     }
 }
 

@@ -3,6 +3,7 @@ package dev.bmac.github.rest
 import dev.bmac.github.Payload
 import dev.bmac.github.UploadResponse
 import dev.bmac.github.getPayload
+import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -21,23 +22,22 @@ class GHInitItest(@Value("\${github.host}") val host: String, @Autowired val res
     @Test
     fun testKeyUpload() {
         val payload = getPayload()
-        val response = uploadKeys(payload)
+        val response = uploadKeys(restTemplate, payload)
 
         Assertions.assertEquals(HttpStatus.OK, response.statusCode)
         Assertions.assertNotNull(response.body)
-        Assertions.assertTrue(response.body.uuid.isNotBlank())
-        Assertions.assertEquals("https://$host/login/oauth/authorize?client_id=&state=${response.body.uuid}&scope=write:public_key,write:gpg_key",
-            response.body.redirect)
+        Assertions.assertTrue(response.body!!.id.isNotBlank())
+        Assertions.assertEquals("https://$host/login/oauth/authorize?client_id=&state=${response.body!!.id}&scope=write:public_key,write:gpg_key",
+            response.body!!.redirect)
 
     }
+}
 
-    private fun uploadKeys(payload: Payload): ResponseEntity<UploadResponse> {
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_JSON
+@UseExperimental(UnstableDefault::class)
+fun uploadKeys(restTemplate: TestRestTemplate, payload: Payload): ResponseEntity<UploadResponse> {
+    val headers = HttpHeaders()
+    headers.contentType = MediaType.APPLICATION_JSON
 
-        val httpEntity = HttpEntity(Json.stringify(Payload.serializer(), payload), headers)
-        return restTemplate.postForEntity("/upload", httpEntity, UploadResponse::class.java)
-    }
-
-
+    val httpEntity = HttpEntity(Json.stringify(Payload.serializer(), payload), headers)
+    return restTemplate.postForEntity("/upload", httpEntity, UploadResponse::class.java)
 }

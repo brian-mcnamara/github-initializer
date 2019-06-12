@@ -24,14 +24,14 @@ data class GpgKey(val armored_public_key: String)
 data class GHErrors(val message: String, val errors: List<GHError>)
 
 @UseExperimental(kotlinx.serialization.UnstableDefault::class)
-class Status(val type: Type, val status: Int, val errors: GHErrors? = null) {
+data class Status(val type: Type, val status: Int, val errors: GHErrors? = null) {
     constructor(type: Type, status: Int, body: String?): this(type, status, Json.nonstrict.parse(GHErrors.serializer(), body ?: ""))
     fun isSuccess(): Boolean {
         return status == HttpStatus.CREATED.value()
     }
 }
 
-class StatusList(val status: List<Status>) {
+data class StatusList(val status: List<Status>) {
     fun isSuccessful(): Boolean {
         return status.all { it.isSuccess() }
     }
@@ -46,12 +46,13 @@ class StatusList(val status: List<Status>) {
 class GitHubUtil(@Value("\${github.api.host}") val githubApiUrl: String,
                  @Value("\${github.host}") val githubUrl: String,
                  @Value("\${client.id}") val clientId: String,
-                 @Value("\${client.secret}") val clientSecret: String) {
+                 @Value("\${client.secret}") val clientSecret: String,
+                 val protocol: String = "https://") {
     private val JSON = MediaType.get("application/json; charset=utf-8")
     private val client = OkHttpClient()
 
     fun getAuthenticationToken(code: String, state: String): String {
-        val url = UriComponentsBuilder.fromPath("https://${githubUrl}/login/oauth/access_token")
+        val url = UriComponentsBuilder.fromPath("$protocol$githubUrl/login/oauth/access_token")
             .queryParam("client_id", clientId)
             .queryParam("client_secret", clientSecret)
             .queryParam("code", code)
@@ -65,25 +66,27 @@ class GitHubUtil(@Value("\${github.api.host}") val githubApiUrl: String,
 
     fun uploadSsshKey(sshKey: SshKey, accessToken: String): Status {
         val json = Json.stringify(SshKey.serializer(), sshKey)
-        val body = okhttp3.RequestBody.create(JSON, json)
-        val request = Request.Builder().url("https://${githubApiUrl}/user/keys")
-            .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
+        val requestBody = okhttp3.RequestBody.create(JSON, json)
+        val request = Request.Builder().url("$protocol$githubApiUrl/user/keys")
+            .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(requestBody).build()
         client.newCall(request).execute().use {
-            it.body().use { body ->
-                return Status(Type.SSH, it.code(), body?.string())
+            it.body()?.use { body ->
+                return Status(Type.SSH, it.code(), body.string())
             }
         }
+        return Status(Type.SSH, 500)
     }
 
     fun uploadGpgKey(gpgKey: GpgKey, accessToken: String): Status {
-        val body = okhttp3.RequestBody.create(JSON, Json.stringify(GpgKey.serializer(), gpgKey))
-        val request = Request.Builder().url("https://${githubApiUrl}/user/gpg_keys")
-            .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(body).build()
+        val requestBody = okhttp3.RequestBody.create(JSON, Json.stringify(GpgKey.serializer(), gpgKey))
+        val request = Request.Builder().url("$protocol$githubApiUrl/user/gpg_keys")
+            .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(requestBody).build()
         client.newCall(request).execute().use {
-            it.body().use { body ->
-                return Status(Type.GPG, it.code(), body?.string())
+            it.body()?.use { body ->
+                return Status(Type.GPG, it.code(), body.string())
             }
         }
+        return Status(Type.GPG, 500)
     }
 
 }

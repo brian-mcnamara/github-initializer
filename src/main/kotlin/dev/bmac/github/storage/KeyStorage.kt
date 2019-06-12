@@ -5,13 +5,14 @@ import dev.bmac.github.rest.State
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.sync.RedisCommands
 import kotlinx.serialization.json.Json
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 @UseExperimental(kotlinx.serialization.UnstableDefault::class)
-class KeyStorage(@Value("\${redis.url}") redisHost: String) {
-    private final val redisClient = RedisClient.create(redisHost)
+class KeyStorage(@Autowired redis: Redis) {
+    private final val redisClient = redis.getClient()
     val conn = getConnection()
     private val stateKey = { key: String -> "state:$key" }
     private val csrfKey = { key: String -> "csrf:$key" }

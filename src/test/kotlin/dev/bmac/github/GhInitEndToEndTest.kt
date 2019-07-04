@@ -3,10 +3,8 @@ package dev.bmac.github
 import com.gargoylesoftware.htmlunit.WebClient
 import com.gargoylesoftware.htmlunit.html.HtmlPage
 import com.gargoylesoftware.htmlunit.html.HtmlSubmitInput
-import dev.bmac.github.rest.Type
 import dev.bmac.github.rest.uploadKeys
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
@@ -37,8 +35,8 @@ class GhInitEndToEndTest {
         val uuid = response.body!!.id
 
         Mockito.`when`(gitHubUtil.getAuthenticationToken(code, uuid)).thenReturn(accessToken)
-        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, accessToken)).thenReturn(Status(Type.SSH, 201))
-        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, accessToken)).thenReturn(Status(Type.GPG, 201))
+        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, accessToken)).thenReturn(Status(KeyType.SSH, 201))
+        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, accessToken)).thenReturn(Status(KeyType.GPG, 201))
         WebClient().use {
             var page = it.getPage<HtmlPage>("${restTemplate.rootUri}/initiate?code=$code&state=$uuid")
             val form = page.getFormByName("verification")
@@ -50,5 +48,11 @@ class GhInitEndToEndTest {
             Mockito.verify(gitHubUtil).uploadGpgKey(payload.gpgKey!!, accessToken)
             Mockito.verify(gitHubUtil).uploadSsshKey(payload.sshKey!!, accessToken)
         }
+
+        val status = restTemplate.getForEntity("/status?id=$uuid", TransactionState::class.java)
+        assertEquals(Progress.COMPLETE, status.body!!.sshStatus!!.progress)
+        assertEquals(Progress.COMPLETE, status.body!!.gpgStatus!!.progress)
+        assertNull(status.body!!.gpgStatus!!.error)
+        assertNull(status.body!!.sshStatus!!.error)
     }
 }

@@ -1,8 +1,6 @@
 package dev.bmac.github.rest
 
-import dev.bmac.github.Payload
-import dev.bmac.github.UploadResponse
-import dev.bmac.github.getPayload
+import dev.bmac.github.*
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions
@@ -30,6 +28,29 @@ class GHInitItest(@Value("\${github.host}") val host: String, @Autowired val res
         Assertions.assertEquals("https://$host/login/oauth/authorize?client_id=&state=${response.body!!.id}&scope=write:public_key,write:gpg_key",
             response.body!!.redirect)
 
+    }
+
+    @Test
+    fun testStatusWithoutUpload() {
+        val response = restTemplate.getForEntity("/status?id=test", TransactionState::class.java)
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+    }
+
+    @Test
+    fun testStatus() {
+        val payload = getPayload()
+        val uploadResponse = uploadKeys(restTemplate, payload)
+
+        val response = restTemplate.getForEntity("/status?id=${uploadResponse.body!!.id}", TransactionState::class.java)
+
+        Assertions.assertEquals(HttpStatus.OK, response.statusCode)
+        Assertions.assertNotNull(response.body)
+
+        Assertions.assertEquals(Progress.IN_PROGRESS, response.body!!.gpgStatus!!.progress)
+        Assertions.assertEquals(Progress.IN_PROGRESS, response.body!!.sshStatus!!.progress)
+        Assertions.assertNull(response.body!!.gpgStatus!!.error)
+        Assertions.assertNull(response.body!!.sshStatus!!.error)
     }
 }
 

@@ -1,14 +1,12 @@
 package dev.bmac.github
 
-import dev.bmac.github.rest.Type
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import java.net.http.HttpHeaders
 
 @UseExperimental(UnstableDefault::class)
 class GitHubUtilTest {
@@ -50,7 +48,7 @@ class GitHubUtilTest {
         val gpgKey = getPayload().gpgKey!!
         mockWeb.enqueue(MockResponse().setBody(body).setResponseCode(statusCode))
 
-        val expectedStatus = Status(Type.GPG, statusCode, error)
+        val expectedStatus = Status(KeyType.GPG, statusCode, error)
 
         mockWeb.start()
 
@@ -75,7 +73,7 @@ class GitHubUtilTest {
         val sshKey = getPayload().sshKey!!
         mockWeb.enqueue(MockResponse().setBody(body).setResponseCode(statusCode))
 
-        val expectedStatus = Status(Type.SSH, statusCode, error)
+        val expectedStatus = Status(KeyType.SSH, statusCode, error)
 
         mockWeb.start()
 

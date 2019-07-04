@@ -8,6 +8,9 @@ import socket
 import time
 import urllib.request
 import urllib.parse
+import requests
+import subprocess
+import os
 
 parser = argparse.ArgumentParser(description='Upload users SSH and GPG keys to GitHub')
 parser.add_argument('--host', dest="host", default="https://gh-initializer.herokuapp.com",
@@ -50,28 +53,38 @@ def main():
         resBody = response.read().decode('utf-8')
         jsonResponse = json.loads(resBody)
         redirect = jsonResponse["redirect"]
-        webbrowser.open(redirect, 1)
+        #webbrowser has some system erros I cant figure out how to suppress, this is the only way I found...
+        FNULL = open(os.devnull, 'w')
+        subprocess.run(['python3', '-m', 'webbrowser', '-t', redirect], stdout=FNULL, stderr=subprocess.STDOUT)
         print("Check your web browser to finish uploading.")
 
     while True:
         time.sleep(2)
-        with urllib.request.urlopen(args.host + "/status?uuid=" + jsonResponse["uuid"]) as response:
-            if response.code is not 200:
-                print("Failed to get status")
+        response = requests.get(args.host + "/status?id=" + jsonResponse["id"])
+        if response.status_code is 404:
+            print("Failed to get status")
+            exit(1)
+        elif response.status_code is 102:
+            continue
+        elif response.status_code is 200:
+            failed = False
+            status = response.json()
+
+            for entry in status:
+                progress = status[entry]['progress']
+                if progress == "COMPLETE":
+                    if 'error' in status[entry]:
+                        failed = True
+                        print("Failed to upload " + status[entry]['type'] + " key: " + status[entry]['error'])
+                    else:
+                        print("Successfully uploaded " + status[entry]['type'] + " key")
+                else:
+                    print("Unknown status " + progress)
+            if failed:
                 exit(1)
-            status = response.read().decode()
-            if status == "INITIATED" or status == "IN_PROGRESS":
-                continue
-            elif status == "FAILED":
-                print("Failed to upload keys")
-                exit(1)
-            elif status == "COMPLETE":
-                print("Successfully uploaded keys")
-                exit(0)
             else:
-                print("Unknown status " + status)
-                exit(1)
+                exit(0)
 
 
 if __name__ == "__main__":
-    main()
+        main()

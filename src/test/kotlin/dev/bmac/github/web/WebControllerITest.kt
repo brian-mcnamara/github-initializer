@@ -1,7 +1,6 @@
 package dev.bmac.github.web
 
 import dev.bmac.github.*
-import dev.bmac.github.rest.Type
 import dev.bmac.github.storage.KeyStorage
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -11,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.test.web.client.match.MockRestRequestMatchers
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
@@ -46,8 +44,8 @@ class WebControllerITest(@Autowired val mockMvc: MockMvc) {
     fun testPerformPage() {
         setupKeystore()
         setupAccessToken()
-        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(Type.GPG, 201))
-        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(Type.SSH, 201))
+        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(KeyType.GPG, 201))
+        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(KeyType.SSH, 201))
         mockMvc.perform(MockMvcRequestBuilders.post("/perform?code=$code&id=$kid&csrf=$csrf"))
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.xpath("//div[@id='success']").exists())
@@ -58,9 +56,9 @@ class WebControllerITest(@Autowired val mockMvc: MockMvc) {
         setupKeystore()
         setupAccessToken()
         val message = "Error with GPG"
-        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(Type.GPG, 500, GHErrors("error",
+        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(KeyType.GPG, 500, GHErrors("error",
             listOf(GHError("GPG", "GPG", "unknown", message)))))
-        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(Type.SSH, 201))
+        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(KeyType.SSH, 201))
         mockMvc.perform(MockMvcRequestBuilders.post("/perform?code=$code&id=$kid&csrf=$csrf"))
             .andExpect(MockMvcResultMatchers.status().isOk)
             .andExpect(MockMvcResultMatchers.xpath("//div[@id='errors']").exists())
@@ -75,10 +73,10 @@ class WebControllerITest(@Autowired val mockMvc: MockMvc) {
         setupAccessToken()
         val gpgMessage = "Error with GPG"
         val sshMessage = "Error with ssh"
-        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(Type.GPG, 500,
+        Mockito.`when`(gitHubUtil.uploadGpgKey(payload.gpgKey!!, auth)).thenReturn(Status(KeyType.GPG, 500,
             GHErrors("", listOf(GHError("", "", "", gpgMessage)))
         ))
-        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(Type.SSH, 500,
+        Mockito.`when`(gitHubUtil.uploadSsshKey(payload.sshKey!!, auth)).thenReturn(Status(KeyType.SSH, 500,
             GHErrors("", listOf(GHError("", "", "", sshMessage)))
         ))
         mockMvc.perform(MockMvcRequestBuilders.post("/perform?code=$code&id=$kid&csrf=$csrf"))
@@ -113,6 +111,7 @@ class WebControllerITest(@Autowired val mockMvc: MockMvc) {
         Mockito.`when`(keyStorage.getPayload(kid)).thenReturn(payload)
         Mockito.`when`(keyStorage.getExpiration(kid)).thenReturn(100)
         Mockito.`when`(keyStorage.getCSRF(kid)).thenReturn(csrf)
+        Mockito.`when`(keyStorage.getState(kid)).thenReturn(TransactionState())
     }
 
     private fun setupAccessToken() {

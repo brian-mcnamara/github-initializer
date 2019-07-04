@@ -1,12 +1,10 @@
 package dev.bmac.github.storage
 
 import dev.bmac.github.Payload
-import dev.bmac.github.rest.State
-import io.lettuce.core.RedisClient
+import dev.bmac.github.TransactionState
 import io.lettuce.core.api.sync.RedisCommands
 import kotlinx.serialization.json.Json
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,7 +18,10 @@ class KeyStorage(@Autowired redis: Redis) {
     fun addPayload(key: String, payload: Payload) {
         conn.set(key, Json.stringify(Payload.serializer(), payload))
         conn.expire(key, 60 * 2)
-        conn.set(stateKey(key), State.INITIATED.name)
+        val state = TransactionState()
+        if (payload.gpgKey != null) state.initGpgKey()
+        if (payload.sshKey != null) state.initSshKey()
+        setState(key, state)
         conn.expire(stateKey(key), 60 * 60)
     }
 
@@ -33,13 +34,13 @@ class KeyStorage(@Autowired redis: Redis) {
         return conn.ttl(key)
     }
 
-    fun setState(key: String, state: State) {
-        conn.set(stateKey(key), state.name)
+    fun setState(key: String, state: TransactionState) {
+        conn.set(stateKey(key), Json.stringify(TransactionState.serializer(), state))
     }
 
-    fun getState(key: String): State {
-        val state = conn.get(stateKey(key)) ?: return State.UNKNOWN
-        return State.valueOf(state)
+    fun getState(key: String): TransactionState {
+        val state: String = conn.get(stateKey(key)) ?: return TransactionState()
+        return Json.parse(TransactionState.serializer(), state)
     }
 
     fun setCSRF(key: String, csrf: String) {

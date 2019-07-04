@@ -2,7 +2,6 @@ package dev.bmac.github.web
 
 import com.google.common.primitives.Longs
 import dev.bmac.github.*
-import dev.bmac.github.rest.State
 import dev.bmac.github.storage.KeyStorage
 import kotlinx.serialization.internal.HexConverter
 import org.bouncycastle.bcpg.ArmoredInputStream
@@ -66,10 +65,16 @@ class WebController(val keyStorage: KeyStorage, val gitHubUtil: GitHubUtil) {
             response.status = HttpStatus.FORBIDDEN.value()
             return null
         }
-        keyStorage.setState(id, State.IN_PROGRESS)
         val accessToken = gitHubUtil.getAuthenticationToken(code, id)
         val status = upload(accessToken, payload)
-        keyStorage.setState(id, if (status.isSuccessful()) State.COMPLETE else State.FAILED )
+        val state = keyStorage.getState(id)
+        status.status.forEach {
+            when (it.type) {
+                KeyType.SSH -> state.sshComplete(it.errors?.errors?.get(0)?.message)
+                KeyType.GPG -> state.gpgComplete(it.errors?.errors?.get(0)?.message)
+            }
+        }
+        keyStorage.setState(id, state)
         model.addAttribute("status", status)
         return "result"
     }

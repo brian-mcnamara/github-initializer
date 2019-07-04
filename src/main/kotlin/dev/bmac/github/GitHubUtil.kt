@@ -1,6 +1,5 @@
 package dev.bmac.github
 
-import dev.bmac.github.rest.Type
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
@@ -21,11 +20,14 @@ data class SshKey(val key: String, val title: String)
 data class GpgKey(val armored_public_key: String)
 
 @Serializable
+data class GHError(val resource: String, val field: String, val code: String, val message: String)
+
+@Serializable
 data class GHErrors(val message: String, val errors: List<GHError>)
 
 @UseExperimental(kotlinx.serialization.UnstableDefault::class)
-data class Status(val type: Type, val status: Int, val errors: GHErrors? = null) {
-    constructor(type: Type, status: Int, body: String?): this(type, status, Json.nonstrict.parse(GHErrors.serializer(), body ?: ""))
+data class Status(val type: KeyType, val status: Int, val errors: GHErrors? = null) {
+    constructor(type: KeyType, status: Int, body: String?): this(type, status, if (body == null) null else Json.nonstrict.parse(GHErrors.serializer(), body))
     fun isSuccess(): Boolean {
         return status == HttpStatus.CREATED.value()
     }
@@ -71,10 +73,10 @@ class GitHubUtil(@Value("\${github.api.host}") val githubApiUrl: String,
             .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(requestBody).build()
         client.newCall(request).execute().use {
             it.body()?.use { body ->
-                return Status(Type.SSH, it.code(), body.string())
+                return Status(KeyType.SSH, it.code(), if (it.code() == 201) null else body.string())
             }
         }
-        return Status(Type.SSH, 500)
+        return Status(KeyType.SSH, 500)
     }
 
     fun uploadGpgKey(gpgKey: GpgKey, accessToken: String): Status {
@@ -83,10 +85,10 @@ class GitHubUtil(@Value("\${github.api.host}") val githubApiUrl: String,
             .header(HttpHeaders.AUTHORIZATION, "token $accessToken").post(requestBody).build()
         client.newCall(request).execute().use {
             it.body()?.use { body ->
-                return Status(Type.GPG, it.code(), body.string())
+                return Status(KeyType.GPG, it.code(), if (it.code() == 201) null else body.string())
             }
         }
-        return Status(Type.GPG, 500)
+        return Status(KeyType.GPG, 500)
     }
 
 }

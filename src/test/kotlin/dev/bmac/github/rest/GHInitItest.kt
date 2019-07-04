@@ -32,7 +32,7 @@ class GHInitItest(@Value("\${github.host}") val host: String, @Autowired val res
 
     @Test
     fun testStatusWithoutUpload() {
-        val response = restTemplate.getForEntity("/status?id=test", TransactionState::class.java)
+        val response = restTemplate.getForEntity("/status?id=test", String::class.java)
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
     }

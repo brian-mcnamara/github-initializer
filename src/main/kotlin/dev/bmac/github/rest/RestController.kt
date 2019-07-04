@@ -36,8 +36,6 @@ class RestController(val keyStorage: KeyStorage,
         val state = keyStorage.getState(uuid)
         if (!state.isValid()) {
             return ResponseEntity(HttpStatus.NOT_FOUND)
-        } else if (!state.isComplete()) {
-            return ResponseEntity(json.stringify(TransactionState.serializer(), state), HttpStatus.PROCESSING)
         }
         return ResponseEntity.ok(json.stringify(TransactionState.serializer(), state))
     }

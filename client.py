@@ -60,30 +60,32 @@ def main():
 
     while True:
         time.sleep(2)
-        response = requests.get(args.host + "/status?id=" + jsonResponse["id"])
-        if response.status_code is 404:
-            print("Failed to get status")
-            exit(1)
-        elif response.status_code is 102:
-            continue
-        elif response.status_code is 200:
-            failed = False
-            status = response.json()
-
-            for entry in status:
-                progress = status[entry]['progress']
-                if progress == "COMPLETE":
-                    if 'error' in status[entry]:
-                        failed = True
-                        print("Failed to upload " + status[entry]['type'] + " key: " + status[entry]['error'])
-                    else:
-                        print("Successfully uploaded " + status[entry]['type'] + " key")
-                else:
-                    print("Unknown status " + progress)
-            if failed:
+        def checkStatus():
+            response = requests.get(args.host + "/status?id=" + jsonResponse["id"])
+            if response.status_code is 404:
+                print("Failed to get status")
                 exit(1)
-            else:
-                exit(0)
+            elif response.status_code is 200:
+                failed = False
+                status = response.json()
+
+                for entry in status:
+                    progress = status[entry]['progress']
+                    if progress == 'IN_PROGRESS':
+                        return
+                    elif progress == "COMPLETE":
+                        if 'error' in status[entry]:
+                            failed = True
+                            print("Failed to upload " + status[entry]['type'] + " key: " + status[entry]['error'])
+                        else:
+                            print("Successfully uploaded " + status[entry]['type'] + " key")
+                    else:
+                        print("Unknown status " + progress)
+                if failed:
+                    exit(1)
+                else:
+                    exit(0)
+        checkStatus()
 
 
 if __name__ == "__main__":

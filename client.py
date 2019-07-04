@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-import webbrowser
 import argparse
-import json
-import subprocess
 import socket
 import time
-import urllib.request
-import urllib.parse
 import requests
 import subprocess
 import os
@@ -44,19 +39,17 @@ def main():
             "armored_public_key" : f.read()
         }
     headers = {'Content-type': 'application/json'}
-    data = str.encode(json.dumps(body))
-    request = urllib.request.Request(args.host + "/upload", data, headers)
-    with urllib.request.urlopen(request) as response:
-        if response.code is not 200:
-            print("Failed to upload to server")
-            exit(1)
-        resBody = response.read().decode('utf-8')
-        jsonResponse = json.loads(resBody)
-        redirect = jsonResponse["redirect"]
-        #webbrowser has some system erros I cant figure out how to suppress, this is the only way I found...
-        FNULL = open(os.devnull, 'w')
-        subprocess.run(['python3', '-m', 'webbrowser', '-t', redirect], stdout=FNULL, stderr=subprocess.STDOUT)
-        print("Check your web browser to finish uploading.")
+    response = requests.post(args.host + "/upload", json=body, headers=headers)
+    if response.status_code is not 200:
+        print("Failed to upload to server")
+        exit(1)
+
+    jsonResponse = response.json()
+    redirect = jsonResponse["redirect"]
+    #webbrowser has some system erros I cant figure out how to suppress, this is the only way I found...
+    FNULL = open(os.devnull, 'w')
+    subprocess.run(['python3', '-m', 'webbrowser', '-t', redirect], stdout=FNULL, stderr=subprocess.STDOUT)
+    print("Check your web browser to finish uploading.")
 
     while True:
         time.sleep(2)

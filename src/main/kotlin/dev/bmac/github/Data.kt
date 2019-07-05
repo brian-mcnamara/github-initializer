@@ -43,9 +43,4 @@ data class TransactionState(var gpgStatus: State? = null, var sshStatus: State? 
     fun isValid(): Boolean {
         return gpgStatus != null || sshStatus != null
     }
-
-    fun isComplete(): Boolean {
-        return isValid() && (gpgStatus == null || gpgStatus!!.progress.equals(Progress.COMPLETE))
-                && (sshStatus == null || sshStatus!!.progress.equals(Progress.COMPLETE))
-    }
 }

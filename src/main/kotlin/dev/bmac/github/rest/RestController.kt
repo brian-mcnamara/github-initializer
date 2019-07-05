@@ -31,12 +31,16 @@ class RestController(val keyStorage: KeyStorage,
         return json.stringify(UploadResponse.serializer(), response)
     }
 
-    @GetMapping("/status")
+    @GetMapping("/status", produces = ["application/json"])
     fun status(@RequestParam("id") uuid: String): ResponseEntity<String> {
         val state = keyStorage.getState(uuid)
-        if (!state.isValid()) {
+        if (not { state.isValid() }) {
             return ResponseEntity(HttpStatus.NOT_FOUND)
         }
         return ResponseEntity.ok(json.stringify(TransactionState.serializer(), state))
     }
+
+}
+inline fun not(what: Function0<Boolean>): Boolean {
+    return !what.invoke()
 }

@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/brian-mcnamara/github-initializer.svg?branch=master)](https://travis-ci.org/brian-mcnamara/github-initializer)
+[![Coverage Status](https://coveralls.io/repos/github/brian-mcnamara/github-initializer/badge.svg?branch=master)](https://coveralls.io/github/brian-mcnamara/github-initializer?branch=master)
+
 # GitHub Initializer
 
 Simple broker that provides API endpoints to securely upload a users SSH and/or GPG keys in order to

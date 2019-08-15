@@ -44,7 +44,7 @@ The following are the endpoints used by this service:
 ## Using client
 
 You can use the client attached by invoking:
-` ./client.py --sshFile /path/to/id_rsa.pub --gpgId [GpGKeyId]`
+` ./client.py upload --sshFile /path/to/id_rsa.pub --gpgId [GpGKeyId]`
 
 ## Development
 

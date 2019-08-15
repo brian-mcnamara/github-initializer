@@ -67,7 +67,7 @@ def main():
                     if progress == 'IN_PROGRESS':
                         return
                     elif progress == "COMPLETE":
-                        if 'error' in status[entry]:
+                        if 'error' in status[entry] and status[entry]['error'] is not None:
                             failed = True
                             print("Failed to upload " + status[entry]['type'] + " key: " + status[entry]['error'])
                         else:

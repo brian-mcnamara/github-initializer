@@ -30,12 +30,12 @@ The following are the endpoints used by this service:
 
 * `POST /upload`:  
     As mentioned above, Clients upload their public keys to this endpoint, initializing the service flow; returns the id and redirect url.
-* `GET /initialize`:  
+* `GET /initiate`:  
     This endpoint is the `Authorization callback URL` used by the GitHub Oauth App. Accepts
     `code` and `state` params passed back from GH. Returns [verification.html](src/main/resources/templates/verification.html)
 * `POST /perform`:  
     Performs the authentication and upload of the keys to GitHub. Requires: `code`: the GH access code, 
-    `id`: the transaction id, `csrf`: a CSRF token from the `/initialize` endpoint. These parameters are 
+    `id`: the transaction id, `csrf`: a CSRF token from the `/initiate` endpoint. These parameters are 
     autofilled in the [verification.html](src/main/resources/templates/verification.html). Returns
     [result.html](src/main/resources/templates/result.html)
 * `GET /status`:  
